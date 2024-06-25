@@ -62,55 +62,51 @@ void setup() {
 }
 
 void loop() {
+  String ssid = "FPT_Students";
+  // show username of wifi
   display.clearDisplay();
-  display.drawBitmap(0, 0, your_image_array, FinPr_success_width, FinPr_success_height, WHITE);
+  display.setTextSize(1);      // Normal 1:1 pixel scale
+  display.setTextColor(WHITE); // Draw white text
+  display.setCursor(0, 0);     // Start at top-left corner
+  display.print(F("Connecting to \n"));
+  display.setCursor(0, 50);
+  display.setTextSize(2);
+  display.print(ssid);
+  display.drawBitmap(73, 10, Wifi_start_bits, Wifi_start_width, Wifi_start_height, WHITE);
   display.display();
   delay(2000);
-  //   String ssid = "FPT_Students";
-  //   // show username of wifi
-  //   display.clearDisplay();
-  //   display.setTextSize(1);      // Normal 1:1 pixel scale
-  //   display.setTextColor(WHITE); // Draw white text
-  //   display.setCursor(0, 0);     // Start at top-left corner
-  //   display.print(F("Connecting to \n"));
-  //   display.setCursor(0, 50);
-  //   display.setTextSize(2);
-  //   display.print(ssid);
-  //   display.drawBitmap(73, 10, Wifi_start_bits, Wifi_start_width, Wifi_start_height, WHITE);
-  //   display.display();
-  //   delay(2000);
 
-  //   display.clearDisplay();
-  //   display.setTextSize(2);      // Normal 1:1 pixel scale
-  //   display.setTextColor(WHITE); // Draw white text
-  //   display.setCursor(8, 0);     // Start at top-left corner
-  //   display.print(F("Connected \n"));
-  //   display.drawBitmap(33, 15, Wifi_connected_bits, Wifi_connected_width, Wifi_connected_height, WHITE);
-  //   display.display();
-  //   delay(2000);
+  display.clearDisplay();
+  display.setTextSize(2);      // Normal 1:1 pixel scale
+  display.setTextColor(WHITE); // Draw white text
+  display.setCursor(8, 0);     // Start at top-left corner
+  display.print(F("Connected \n"));
+  display.drawBitmap(33, 15, Wifi_connected_bits, Wifi_connected_width, Wifi_connected_height, WHITE);
+  display.display();
+  delay(2000);
 
-  //   display.clearDisplay();
-  //   display.drawBitmap(32, 0, FinPr_failed_bits, FinPr_failed_width, FinPr_failed_height, WHITE);
-  //   display.display();
-  //   delay(2000);
+  display.clearDisplay();
+  display.drawBitmap(32, 0, FinPr_failed_bits, FinPr_failed_width, FinPr_failed_height, WHITE);
+  display.display();
+  delay(2000);
 
-  //   display.clearDisplay();
-  //   display.drawBitmap(32, 0, FinPr_scan_bits, FinPr_scan_width, FinPr_scan_height, WHITE);
-  //   display.display();
-  //   delay(2000);
+  display.clearDisplay();
+  display.drawBitmap(32, 0, FinPr_scan_bits, FinPr_scan_width, FinPr_scan_height, WHITE);
+  display.display();
+  delay(2000);
 
-  //   display.clearDisplay();
-  //   display.drawBitmap(32, 0, FinPr_start_bits, FinPr_start_width, FinPr_start_height, WHITE);
-  //   display.display();
-  //   delay(2000);
+  display.clearDisplay();
+  display.drawBitmap(32, 0, FinPr_start_bits, FinPr_start_width, FinPr_start_height, WHITE);
+  display.display();
+  delay(2000);
 
-  //   display.clearDisplay();
-  //   display.drawBitmap(32, 0, FinPr_valid_bits, FinPr_valid_width, FinPr_valid_height, WHITE);
-  //   display.display();
-  //   delay(2000);
+  display.clearDisplay();
+  display.drawBitmap(32, 0, FinPr_valid_bits, FinPr_valid_width, FinPr_valid_height, WHITE);
+  display.display();
+  delay(2000);
 
-  //   display.clearDisplay();
-  //   display.drawBitmap(32, 0, FinPr_invalid_bits, FinPr_invalid_width, FinPr_invalid_height, WHITE);
-  //   display.display();
-  //   delay(2000);
+  display.clearDisplay();
+  display.drawBitmap(32, 0, FinPr_invalid_bits, FinPr_invalid_width, FinPr_invalid_height, WHITE);
+  display.display();
+  delay(2000);
 }
