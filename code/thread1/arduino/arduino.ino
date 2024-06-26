@@ -17,6 +17,7 @@ Adafruit_Fingerprint finger = Adafruit_Fingerprint(&mySerial);
 Adafruit_SSD1306 display; // Create display
 
 void cleanSerialBuffer(); // Xóa bộ đệm của Serial
+bool checkSensorFire();   // Kiểm tra cảm biến cháy
 
 void setup()
 {
