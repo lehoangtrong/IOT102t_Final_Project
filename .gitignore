@@ -1,3 +1,4 @@
 .vscode
 libraries
 icon_oled
+*.json
