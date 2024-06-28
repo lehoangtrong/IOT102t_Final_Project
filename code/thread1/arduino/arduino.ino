@@ -12,7 +12,7 @@
 #define SCREEN_WIDTH 128  // OLED display width, in pixels
 #define SCREEN_HEIGHT 64  // OLED display height, in pixels
 
-uint8_t fireSensorValue = 0;
+uint8_t    = 0;
 uint8_t pirSensorValue = 0;
 uint8_t airSensorValue = 0;
 
