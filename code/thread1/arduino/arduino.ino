@@ -1,7 +1,7 @@
 #include <SoftwareSerial.h>
 #include <LiquidCrystal_I2C.h>
 #include <Servo.h>
-#include 
+#include <SerialCommand.h>
 
 #define PIN_FIRE_SENSOR 6
 #define PIN_PIR_SENSOR 7
@@ -12,10 +12,12 @@ uint8_t fireSensorValue = 0;
 uint8_t pirSensorValue = 0;
 uint8_t airSensorValue = 0;
 
+SerialCommand sCmd;
 LiquidCrystal_I2C lcd(0x27, 16, 2);
 Servo servoMotor;
 
 bool checkSensorFire(); // Kiểm tra cảm biến cháy
+void UARTReceive();     // Nhận dữ liệu từ esp8266
 
 void setup()
 {
@@ -26,6 +28,9 @@ void setup()
   pinMode(PIN_PIR_SENSOR, INPUT);
   pinMode(PIN_AIR_SENSOR, INPUT);
   pinMode(PIN_SERVO_MOTOR, OUTPUT);
+
+  Serial.begin(115200);
+  sCmd.addCommand("Open", UARTReceive);
 }
 
 void loop()
@@ -64,8 +69,7 @@ void loop()
     servoMotor.write(0);
   }
 
-
-  
+  sCmd.readSerial();
 }
 
 bool checkSensorValue()
@@ -83,4 +87,28 @@ bool checkSensorValue()
     }
   }
   return check;
+}
+
+void UARTReceive()
+{
+  char *arg;
+  arg = sCmd.next();
+  // command is Open 90
+  if (arg != NULL)
+  {
+    if (strcmp(arg, "Open") == 0)
+    {
+      arg = sCmd.next();
+      if (arg != NULL)
+      {
+        int angle = atoi(arg);
+        servoMotor.attach(PIN_SERVO_MOTOR);
+        servoMotor.write(angle);
+
+        // Delay 2s
+        delay(2000);
+        servoMotor.write(0);
+      }
+    }
+  }
 }

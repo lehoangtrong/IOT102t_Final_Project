@@ -35,8 +35,7 @@ void fingerSystem();                // take attendance by fingerprint
 void displayOled(uint8_t choice);   // display oled
 bool checkStudent(int fingerID);    // check student by fingerID
 string getStudent(String response); // get studentID, studentName
-
-void getName(String fingerID);
+void UARTSend(String data);         // send data to arduino uno
 
 void setup()
 {
@@ -165,7 +164,7 @@ void fingerSystem()
       display.display();
 
       // Open door send to arduino uno to open door follow UART
-      Serial.println("Open door");
+      UARTSend("OPEN 90\r\n");
     }
     delay(1000);
   }
@@ -345,4 +344,9 @@ string getStudent(String response)
   String studentName = response.substring(index2 + 14, response.length() - 3); // 14 is length of "studentName": "
                                                                                // 3 is length of "\n}
   return "&studentID=" + studentID + "&studentName=" + studentName;
+}
+
+void UARTSend(String data)
+{
+  Serial.print(data);
 }
