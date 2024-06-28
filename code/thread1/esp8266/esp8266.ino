@@ -155,10 +155,6 @@ void fingerSystem()
 
     displayOled(fingerprint_valid_icon);
 
-    // show id fingerprint
-
-    //
-
     if (checkStudent(finger.fingerID))
     {
       display.clearDisplay();
@@ -167,6 +163,9 @@ void fingerSystem()
       display.setCursor(0, 0);
       display.println("Finger ID: " + String(finger.fingerID));
       display.display();
+
+      // Open door send to arduino uno to open door follow UART
+      Serial.println("Open door");
     }
     delay(1000);
   }
@@ -312,17 +311,18 @@ bool checkStudent(int fingerID)
       if (response.indexOf("Attendant taken") != -1)
       {
         check = true;
-      }
+        display.clearDisplay();
+        display.setTextSize(1);
+        display.setTextColor(SSD1306_WHITE);
+        display.setCursor(0, 0);
+        display.println("Student ID: " + studentID);
+        display.setCursor(0, 20);
+        display.println("Student Name: " + studentName);
+        display.display();
+        delay(1000);
 
-      display.clearDisplay();
-      display.setTextSize(1);
-      display.setTextColor(SSD1306_WHITE);
-      display.setCursor(0, 0);
-      display.println("Student ID: " + studentID);
-      display.setCursor(0, 20);
-      display.println("Student Name: " + studentName);
-      display.display();
-      check = true;
+        Serial.print("OPEN 90\r\n");
+      }
     }
     else
     {

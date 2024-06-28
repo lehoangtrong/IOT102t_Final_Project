@@ -64,8 +64,6 @@ function doGet(e) {
     var data = sheet.getDataRange().getValues();
     for (var i = 1; i < data.length; i++) {
       if (data[i][3] == fingerID) {
-        // data[1] = [id, studentID, studentName, fingerID]
-        // add it to json object
         result = {
           studentID: data[i][2],
           studentName: data[i][3],
