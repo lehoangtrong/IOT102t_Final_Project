@@ -31,9 +31,13 @@ const char *password = "nonepassword";
 
 WiFiClientSecure client;
 
-void displayOled(uint8_t choice); // display oled
-void UARTSend(String data);       // send data to arduino uno
-void clearBuffer();
+void displayOled(uint8_t choice);                                       // display oled
+void UARTSend(String data);                                             // send data to arduino uno
+void clearBuffer();                                                     // clear buffer
+String addFingerPrint();                                                // add fingerprint
+String UARTRead();                                                      // read data from arduino uno
+bool sendGoogleSheet(String name, String studentID, String fingerID);   // send data to google sheet
+bool updateGoogleSheet(String name, String studentID, String fingerID); // update data to google sheet
 
 void setup()
 {
@@ -90,33 +94,80 @@ void setup()
 
 void loop()
 {
-    clearBuffer();
-    // Serial show fingerprint system
-    Serial.println("Fingerprint system");
-    Serial.println("1. Add new student fingerprint");
-    Serial.println("2. Update student fingerprint");
-    Serial.println("3. Delete student fingerprint");
-    Serial.println("Choose: ");
-    while (Serial.available() == 0)
-        ;
-    int choice = Serial.parseInt();
-    switch (choice)
+    while (true)
     {
-    case 1:
-        // Add new student fingerprint
-        // Collect student information and send to server (use c#)
-        break;
-    case 2:
-        // Update student fingerprint
-        // Collect student information and send to server (use c#)
-        break;
-    case 3:
-        // Delete student fingerprint
-        // Collect student information and send to server (use c#)
-        break;
-    default:
-        break;
+        // Connect to winform app
+        if (Serial.available() > 0)
+        {
+            char received = Serial.read();
+            if (received == "c")
+            {
+                Serial.println("Connected");
+                break;
+            }
+            else if (received == "a")
+            {
+                // read name and studentID
+                String name = UARTRead();
+                String studentID = UARTRead();
+                String fingerID = addFingerPrint();
+                // send data to server
+                if (sendGoogleSheet(name, studentID, fingerID))
+                {
+                    Serial.println("Thêm sinh viên thành công");
+                }
+                else
+                {
+                    Serial.println("Thêm sinh viên thất bại");
+                }
+                break;
+            }
+            else if (received == "u")
+            {
+                // read name and studentID
+                String name = UARTRead();
+                String studentID = UARTRead();
+                String fingerID = addFingerPrint();
+                // send data to server
+                if (updateGoogleSheet(name, studentID, fingerID))
+                {
+                    Serial.println("Cập nhật sinh viên thành công");
+                }
+                else
+                {
+                    Serial.println("Cập nhật sinh viên thất bại");
+                }
+                break;
+            }
+        }
     }
+    // clearBuffer();
+    // // Serial show fingerprint system
+    // Serial.println("Fingerprint system");
+    // Serial.println("1. Add new student fingerprint");
+    // Serial.println("2. Update student fingerprint");
+    // Serial.println("3. Delete student fingerprint");
+    // Serial.println("Choose: ");
+    // while (Serial.available() == 0)
+    //     ;
+    // int choice = Serial.parseInt();
+    // switch (choice)
+    // {
+    // case 1:
+    //     // Add new student fingerprint
+    //     // Collect student information and send to server (use c#)
+    //     break;
+    // case 2:
+    //     // Update student fingerprint
+    //     // Collect student information and send to server (use c#)
+    //     break;
+    // case 3:
+    //     // Delete student fingerprint
+    //     // Collect student information and send to server (use c#)
+    //     break;
+    // default:
+    //     break;
+    // }
 }
 
 void displayOled(uint8_t choice)
@@ -194,7 +245,43 @@ void displayOled(uint8_t choice)
     }
 }
 
-void UARTSend(String data)
+String UARTRead()
 {
-    Serial.print(data);
+    String data = "";
+    while (Serial.available() > 0)
+    {
+        String data = Serial.readString();
+    }
+    return data
+}
+
+bool sendGoogleSheet(String name, String studentID, String fingerID)
+{
+    bool result = false;
+    if (!client.connect(host, httpsPort))
+    {
+        Serial.println("Connection failed");
+        return false;
+    }
+    String url = "/macros/s/" + googleSheetID + "/exec?name=" + name + "&studentID=" + studentID + "&fingerID=" + fingerID;
+    client.print(String("GET ") + url + " HTTP/1.1\r\n" +
+                 "Host: " + host + "\r\n" +
+                 "Connection: close\r\n\r\n");
+    if (client.connected() || client.available())
+    {
+        while (client.connected() || client.available())
+        {
+            String line = client.readStringUntil('\n');
+            if (line == "\r")
+            {
+                break;
+            }
+        }
+        String line = client.readStringUntil('\n');
+        if (line == "Success")
+        {
+            result = true;
+        }
+    }
+    return result;
 }
