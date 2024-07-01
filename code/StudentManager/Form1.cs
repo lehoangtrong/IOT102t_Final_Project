@@ -1,5 +1,10 @@
-﻿using System.IO.Ports;
+﻿using System;
+using System.Drawing;
+using System.IO.Ports;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Windows.Forms;
 
 namespace StudentManager
 {
@@ -77,16 +82,51 @@ namespace StudentManager
             textBoxName.Enabled = true;
             textBoxStudentID.Enabled = true;
 
+            serialPort.DataReceived += new SerialDataReceivedEventHandler(SerialPort_DataReceived);
+        }
+
+        private void SerialPort_DataReceived(object sender, SerialDataReceivedEventArgs e)
+        {
+            string data = serialPort.ReadLine();
+            this.Invoke(new Action(() =>
+            {
+                serialOutput.AppendText(data + Environment.NewLine);
+                if (data.Contains("EXIST"))
+                {
+                    MessageBox.Show("Student already exists. Please try again.");
+                }
+                else if (data.Contains("ADDED"))
+                {
+                    MessageBox.Show("Student added successfully.");
+                }
+                else if (data.Contains("UPDATED"))
+                {
+                    MessageBox.Show("Student updated successfully.");
+                }
+            }));
         }
 
         private void clearButton_Click(object sender, EventArgs e)
         {
-
+            serialOutput.Clear();
+            textBoxName.Clear();
+            textBoxStudentID.Clear();
         }
 
         private void addButton_Click(object sender, EventArgs e)
         {
+            string studentName = textBoxName.Text;
+            string studentId = textBoxStudentID.Text;
+            // Gửi dữ liệu sinh viên qua cổng serial để thêm sinh viên
+            serialPort.WriteLine($"ADD:{studentName},{studentId}");
+        }
 
+        private void updateButton_Click(object sender, EventArgs e)
+        {
+            string studentName = textBoxName.Text;
+            string studentId = textBoxStudentID.Text;
+            // Gửi dữ liệu sinh viên qua cổng serial để cập nhật sinh viên
+            serialPort.WriteLine($"UPDATE:{studentName},{studentId}");
         }
     }
 }
