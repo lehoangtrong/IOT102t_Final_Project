@@ -1,4 +1,5 @@
-const sheetID = "1qFt-k1qpbiFFuHlqcFvYNkydSImbJD_kSUYsNl-0JDE";
+const sheetID =
+  "AKfycbziXksUeubaKHlDtbA1ktCBU7BpTTEOtgBh5-AyCyKGpm-bGYcwXGpSUqxjrG6eR2tnfw";
 
 function doGet(e) {
   var result = "done";
@@ -7,11 +8,17 @@ function doGet(e) {
 
   if (e.parameter.type == "takeAttendant") {
     // get studentID from e.parameter
-    var studentID = e.parameter.studentID;
-    if (studentID == null) {
-      return ContentService.createTextOutput("studentID is null");
+    var fingerID = e.parameter.fingerID;
+    // Check fingerID has been in the table students
+    var sheet = SpreadsheetApp.openById(sheetID).getSheetByName("students");
+    var data = sheet.getDataRange().getValues();
+    var studentID = null;
+    for (var i = 1; i < data.length; i++) {
+      if (data[i][3] == fingerID) {
+        studentID = data[i][1];
+        break;
+      }
     }
-
     var date = new Date();
     var currentDate = Utilities.formatDate(date, "GMT+7", "dd/MM/yyyy");
 

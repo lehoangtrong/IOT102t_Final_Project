@@ -32,12 +32,8 @@ const char *password = "nonepassword";
 WiFiClientSecure client;
 
 void displayOled(uint8_t choice);                                       // display oled
-void UARTSend(String data);                                             // send data to arduino uno
 void clearBuffer();                                                     // clear buffer
 String addFingerPrint();                                                // add fingerprint
-String UARTRead();                                                      // read data from arduino uno
-bool sendGoogleSheet(String name, String studentID, String fingerID);   // send data to google sheet
-bool updateGoogleSheet(String name, String studentID, String fingerID); // update data to google sheet
 
 void setup()
 {
@@ -96,11 +92,10 @@ void loop()
 {
     while (true)
     {
-        // Connect to winform app
         if (Serial.available() > 0)
         {
             char received = Serial.read();
-            if (received == "c")
+            if (received == 'c')
             {
                 Serial.println("Connected");
                 break;
@@ -141,33 +136,80 @@ void loop()
             }
         }
     }
-    // clearBuffer();
-    // // Serial show fingerprint system
-    // Serial.println("Fingerprint system");
-    // Serial.println("1. Add new student fingerprint");
-    // Serial.println("2. Update student fingerprint");
-    // Serial.println("3. Delete student fingerprint");
-    // Serial.println("Choose: ");
-    // while (Serial.available() == 0)
-    //     ;
-    // int choice = Serial.parseInt();
-    // switch (choice)
-    // {
-    // case 1:
-    //     // Add new student fingerprint
-    //     // Collect student information and send to server (use c#)
-    //     break;
-    // case 2:
-    //     // Update student fingerprint
-    //     // Collect student information and send to server (use c#)
-    //     break;
-    // case 3:
-    //     // Delete student fingerprint
-    //     // Collect student information and send to server (use c#)
-    //     break;
-    // default:
-    //     break;
-    // }
+}
+
+string addFingerPrint(){
+    displayOled(finger_scan_icon);
+    String fingerID = "";
+    while (true)
+    {
+        uint8_t p = finger.getImage();
+        switch (p)
+        {
+        case FINGERPRINT_OK:
+            Serial.println("Image taken");
+            break;
+        case FINGERPRINT_NOFINGER:
+            Serial.println("No finger detected");
+            continue;
+        case FINGERPRINT_PACKETRECIEVEERR:
+            Serial.println("Communication error");
+            continue;
+        case FINGERPRINT_IMAGEFAIL:
+            Serial.println("Imaging error");
+            continue;
+        default:
+            Serial.println("Unknown error");
+            continue;
+        }
+
+        p = finger.image2Tz(1);
+        switch (p)
+        {
+        case FINGERPRINT_OK:
+            Serial.println("Image converted");
+            break;
+        case FINGERPRINT_IMAGEMESS:
+            Serial.println("Image too messy");
+            continue;
+        case FINGERPRINT_PACKETRECIEVEERR:
+            Serial.println("Communication error");
+            continue;
+        case FINGERPRINT_FEATUREFAIL:
+            Serial.println("Could not find fingerprint features");
+            continue;
+        case FINGERPRINT_INVALIDIMAGE:
+            Serial.println("Could not find fingerprint features");
+            continue;
+        default:
+            Serial.println("Unknown error");
+            continue;
+        }
+
+        p = finger.fingerFastSearch();
+        if (p == FINGERPRINT_OK)
+        {
+            Serial.println("Found a print match!");
+            fingerID = finger.fingerID;
+            break;
+        }
+        else if (p == FINGERPRINT_PACKETRECIEVEERR)
+        {
+            Serial.println("Communication error");
+            continue;
+        }
+        else if (p == FINGERPRINT_NOTFOUND)
+        {
+            Serial.println("Did not find a match");
+            continue;
+        }
+        else
+        {
+            Serial.println("Unknown error");
+            continue;
+        }
+    }
+    return fingerID;
 }
 
 void displayOled(uint8_t choice)
@@ -243,16 +285,6 @@ void displayOled(uint8_t choice)
         delay(1000);
         return;
     }
-}
-
-String UARTRead()
-{
-    String data = "";
-    while (Serial.available() > 0)
-    {
-        String data = Serial.readString();
-    }
-    return data
 }
 
 bool sendGoogleSheet(String name, String studentID, String fingerID)
