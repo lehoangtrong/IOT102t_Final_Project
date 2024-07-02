@@ -2,12 +2,16 @@
 using System.Drawing;
 using System.IO.Ports;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Windows.Forms;
 
 namespace StudentManager
 {
     public partial class Form1 : Form
     {
-        private static SerialPort? serialPort;
+        private static SerialPort serialPort;
+        private static bool isWaitingForSerial;
 
         public Form1()
         {
@@ -19,80 +23,55 @@ namespace StudentManager
             init();
         }
 
-        private async void init()
-        {
-            await Task.Delay(1000);
-            while (serialPort == null) await Task.Run(() => FindDevice());
-            GetData();
-            CheckComStatus();
-        }
-
-        private void GetData()
-        {
-            serialPort.Write("g");
-
-            List<Student> students = new List<Student>();
-
-            while (true)
-            {
-                string response = serialPort.ReadLine().Replace("\r", "");
-                if (response.Equals("DONE")) break;
-                string[] data = response.Split(';');
-                Student student = new Student
-                {
-                    Name = data[0],
-                    StudentID = data[1],
-                    fingerPrintID = data[2]
-                };
-                students.Add(student);             
-            }
-            dataStudent.DataSource = students;
-        }
-
-        private void FindDevice()
+        private void FindESP8266()
         {
             string[] COMPorts = SerialPort.GetPortNames();
 
-            SerialPort? port = new SerialPort();
-
             foreach (string COMPort in COMPorts)
             {
+                SerialPort port = new SerialPort(COMPort, 115200)
+                {
+                    NewLine = "\r\n",
+                    Encoding = System.Text.Encoding.UTF8
+                };
+
                 try
                 {
-                    port = new SerialPort(COMPort, 115200)
-                    {
-                        Encoding = System.Text.Encoding.UTF8
-                    };
                     port.Open();
-                    if (port.IsOpen)
+                    port.Write("c");
+
+                    for (int i = 0; i < 10; i++)
                     {
-                        port.Write("c");
-                        string response = port.ReadLine().Replace("\r", "");
-                        if (response == "Connected")
+                        Thread.Sleep(100);
+                        if (port.BytesToRead == 0)
                         {
-                            serialPort = port;
-                            Invoke(new Action(() =>
-                            {
-                                statusLabel.Text = "Đã kết nối";
-                                statusLabel.ForeColor = Color.Green;
-                                addButton.Enabled = true;
-                                clearButton.Enabled = true;
-                                textBoxName.Enabled = true;
-                                textBoxStudentID.Enabled = true;
-                            }));
+                            port.Write("F");
                         }
+                        else break;
+                    }
+                    if (port.BytesToRead == 0)
+                    {
+                        port.Dispose();
+                        continue;
+                    }
+                    string response = port.ReadLine();
+                    if (response == "Connected")
+                    {
+                        serialPort = port;
+                        serialPort.DiscardInBuffer();
+                        return;
                     }
                 }
-                catch (Exception e)
+                catch (Exception)
                 {
-
-                    MessageBox.Show(e.Message);
-                    port.Dispose();
+                    continue;
                 }
+
+                port.Dispose();
             }
         }
 
-        private async void CheckComStatus()
+        private async void init()
         {
             await Task.Delay(200);
             while (serialPort == null) await Task.Run(() => FindESP8266());
@@ -103,16 +82,51 @@ namespace StudentManager
             textBoxName.Enabled = true;
             textBoxStudentID.Enabled = true;
 
+            serialPort.DataReceived += new SerialDataReceivedEventHandler(SerialPort_DataReceived);
+        }
+
+        private void SerialPort_DataReceived(object sender, SerialDataReceivedEventArgs e)
+        {
+            string data = serialPort.ReadLine();
+            this.Invoke(new Action(() =>
+            {
+                serialOutput.AppendText(data + Environment.NewLine);
+                if (data.Contains("EXIST"))
+                {
+                    MessageBox.Show("Student already exists. Please try again.");
+                }
+                else if (data.Contains("ADDED"))
+                {
+                    MessageBox.Show("Student added successfully.");
+                }
+                else if (data.Contains("UPDATED"))
+                {
+                    MessageBox.Show("Student updated successfully.");
+                }
+            }));
         }
 
         private void clearButton_Click(object sender, EventArgs e)
         {
-
+            serialOutput.Clear();
+            textBoxName.Clear();
+            textBoxStudentID.Clear();
         }
 
         private void addButton_Click(object sender, EventArgs e)
         {
+            string studentName = textBoxName.Text;
+            string studentId = textBoxStudentID.Text;
+            // Gửi dữ liệu sinh viên qua cổng serial để thêm sinh viên
+            serialPort.WriteLine($"ADD:{studentName},{studentId}");
+        }
 
+        private void updateButton_Click(object sender, EventArgs e)
+        {
+            string studentName = textBoxName.Text;
+            string studentId = textBoxStudentID.Text;
+            // Gửi dữ liệu sinh viên qua cổng serial để cập nhật sinh viên
+            serialPort.WriteLine($"UPDATE:{studentName},{studentId}");
         }
     }
 }
