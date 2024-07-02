@@ -13,6 +13,7 @@
 
 const char *host = "script.google.com";
 const int httpsPort = 443;
+String GAS_ID = "AKfycbziXksUeubaKHlDtbA1ktCBU7BpTTEOtgBh5-AyCyKGpm-bGYcwXGpSUqxjrG6eR2tnfw";
 
 // Fingerprint scanner Pins
 #define Finger_Rx 14 // D5
@@ -31,9 +32,9 @@ const char *password = "nonepassword";
 
 WiFiClientSecure client;
 
-void displayOled(uint8_t choice);                                       // display oled
-void clearBuffer();                                                     // clear buffer
-String addFingerPrint();                                                // add fingerprint
+void displayOled(uint8_t choice); // display oled
+void clearBuffer();               // clear buffer
+String addFingerPrint();          // add fingerprint
 
 void setup()
 {
@@ -102,11 +103,12 @@ void loop()
             }
             else if (received == "a")
             {
-                // read name and studentID
-                String name = UARTRead();
-                String studentID = UARTRead();
+                String studentID = Serial.readStringUntil(';');
+                String studentName = Serial.readStringUntil('\n');
+                Serial.println("Tên sinh viên: " + studentName);
+                Serial.println("Đang nhập vân tay cho sinh viên có mã số: " + studentID);
                 String fingerID = addFingerPrint();
-                // send data to server
+                Serial.println("Chờ xác nhận từ server");
                 if (sendGoogleSheet(name, studentID, fingerID))
                 {
                     Serial.println("Thêm sinh viên thành công");
@@ -115,101 +117,103 @@ void loop()
                 {
                     Serial.println("Thêm sinh viên thất bại");
                 }
-                break;
-            }
-            else if (received == "u")
-            {
-                // read name and studentID
-                String name = UARTRead();
-                String studentID = UARTRead();
-                String fingerID = addFingerPrint();
-                // send data to server
-                if (updateGoogleSheet(name, studentID, fingerID))
-                {
-                    Serial.println("Cập nhật sinh viên thành công");
-                }
-                else
-                {
-                    Serial.println("Cập nhật sinh viên thất bại");
-                }
+                Serial.println("DONE");
                 break;
             }
         }
     }
 }
 
-string addFingerPrint(){
-    displayOled(finger_scan_icon);
-    String fingerID = "";
-    while (true)
+string addFingerPrint()
+{
+    uint8_t p = finger.getImage();
+    displayOled(fingerprint_scan_icon);
+    switch (p)
     {
-        uint8_t p = finger.getImage();
-        switch (p)
-        {
-        case FINGERPRINT_OK:
-            Serial.println("Image taken");
-            break;
-        case FINGERPRINT_NOFINGER:
-            Serial.println("No finger detected");
-            continue;
-        case FINGERPRINT_PACKETRECIEVEERR:
-            Serial.println("Communication error");
-            continue;
-        case FINGERPRINT_IMAGEFAIL:
-            Serial.println("Imaging error");
-            continue;
-        default:
-            Serial.println("Unknown error");
-            continue;
-        }
-
-        p = finger.image2Tz(1);
-        switch (p)
-        {
-        case FINGERPRINT_OK:
-            Serial.println("Image converted");
-            break;
-        case FINGERPRINT_IMAGEMESS:
-            Serial.println("Image too messy");
-            continue;
-        case FINGERPRINT_PACKETRECIEVEERR:
-            Serial.println("Communication error");
-            continue;
-        case FINGERPRINT_FEATUREFAIL:
-            Serial.println("Could not find fingerprint features");
-            continue;
-        case FINGERPRINT_INVALIDIMAGE:
-            Serial.println("Could not find fingerprint features");
-            continue;
-        default:
-            Serial.println("Unknown error");
-            continue;
-        }
-
-        p = finger.fingerFastSearch();
-        if (p == FINGERPRINT_OK)
-        {
-            Serial.println("Found a print match!");
-            fingerID = finger.fingerID;
-            break;
-        }
-        else if (p == FINGERPRINT_PACKETRECIEVEERR)
-        {
-            Serial.println("Communication error");
-            continue;
-        }
-        else if (p == FINGERPRINT_NOTFOUND)
-        {
-            Serial.println("Did not find a match");
-            continue;
-        }
-        else
-        {
-            Serial.println("Unknown error");
-            continue;
-        }
+    case FINGERPRINT_OK:
+        Serial.println("Vân tay đã được lấy");
+        break;
+    case FINGERPRINT_NOFINGER:
+        Serial.print(".");
+        return;
+    default:
+        Serial.println("Lỗi không xác định");
+        return;
     }
-    return fingerID;
+
+    displayOled(fingerprint_icon);
+    Serial.println("Đang chuyển đổi vân tay");
+    p = finger.image2Tz();
+    switch (p)
+    {
+    case FINGERPRINT_OK:
+        Serial.println("Vân tay đã được chuyển đổi");
+        break;
+    case FINGERPRINT_IMAGEMESS:
+        Serial.println("Vân tay quá mờ");
+        return;
+    case FINGERPRINT_PACKETRECIEVEERR:
+        Serial.println("Lỗi truyền thông");
+        return;
+    case FINGERPRINT_FEATUREFAIL:
+        Serial.println("Không thể tìm thấy đặc điểm vân tay");
+        return;
+    case FINGERPRINT_INVALIDIMAGE:
+        Serial.println("Không thể tìm thấy đặc điểm vân tay");
+        return;
+    default:
+        Serial.println("Lỗi không xác định");
+        return;
+    }
+
+    p = finger.createModel();
+    Serial.println("Đang tạo mẫu vân tay");
+    if (p == FINGERPRINT_OK)
+    {
+        Serial.println("Đã tạo mẫu vân tay");
+    }
+    else if (p == FINGERPRINT_PACKETRECIEVEERR)
+    {
+        Serial.println("Lỗi truyền thông");
+        return;
+    }
+    else if (p == FINGERPRINT_ENROLLMISMATCH)
+    {
+        Serial.println("Vân tay không khớp");
+        return;
+    }
+    else
+    {
+        Serial.println("Lỗi không xác định");
+        return;
+    }
+    p = finger.storeModel();
+    Serial.println("Đang lưu vân tay");
+    if (p == FINGERPRINT_OK)
+    {
+        Serial.println("Đã lưu vân tay thành công");
+    }
+    else if (p == FINGERPRINT_PACKETRECIEVEERR)
+    {
+        Serial.println("Lỗi truyền thông");
+        return;
+    }
+    else if (p == FINGERPRINT_BADLOCATION)
+    {
+        Serial.println("Vị trí lưu không hợp lệ");
+        return;
+    }
+    else if (p == FINGERPRINT_FLASHERR)
+    {
+        Serial.println("Lỗi lưu trữ");
+        return;
+    }
+    else
+    {
+        Serial.println("Lỗi không xác định");
+        return;
+    }
+    return finger.fingerID;
 }
 
 void displayOled(uint8_t choice)
@@ -290,29 +294,44 @@ void displayOled(uint8_t choice)
 bool sendGoogleSheet(String name, String studentID, String fingerID)
 {
     bool result = false;
-    if (!client.connect(host, httpsPort))
+    if (Serial.available() > 0)
     {
-        Serial.println("Connection failed");
-        return false;
-    }
-    String url = "/macros/s/" + googleSheetID + "/exec?name=" + name + "&studentID=" + studentID + "&fingerID=" + fingerID;
-    client.print(String("GET ") + url + " HTTP/1.1\r\n" +
-                 "Host: " + host + "\r\n" +
-                 "Connection: close\r\n\r\n");
-    if (client.connected() || client.available())
-    {
-        while (client.connected() || client.available())
+        char received = Serial.read();
+        if (received == 'c')
         {
-            String line = client.readStringUntil('\n');
-            if (line == "\r")
+            Serial.println("Đang kết nối tới Google Sheets");
+            if (!client.connect(host, httpsPort))
             {
-                break;
+                Serial.println("Kết nối thất bại vui lòng thử lại sau");
+                return;
             }
-        }
-        String line = client.readStringUntil('\n');
-        if (line == "Success")
-        {
-            result = true;
+            Serial.println("Kết nối thành công tới Google Sheets");
+            String url = "/macros/s/" + GAS_ID + "/exec?type=enrollStudent&studentID=" + studentID + "&studentName=" + name + "&fingerID=" + fingerID;
+            Serial.print("Đang gửi yêu cầu: ");
+            Serial.println(url);
+            client.print(String("GET ") + url + " HTTP/1.1\r\n" + "Host: " + host + "\r\n" + "User-Agent: BuildFailureDetectorESP8266\r\n" + "Connection: close\r\n\r\n");
+            Serial.println("Yêu cầu đã được gửi đi");
+            while (client.connected())
+            {
+                String line = client.readStringUntil('\n');
+                if (line == "\r")
+                {
+                    Serial.println("Đã nhận được phản hồi từ server");
+                    break;
+                }
+            }
+            String line = client.readStringUntil('\n');
+            if (line == "enroll success")
+            {
+                Serial.println("Thêm sinh viên thành công");
+                result = true;
+            }
+            else
+            {
+                Serial.println("Thêm sinh viên thất bại");
+                result = false;
+            }
+            client.stop();
         }
     }
     return result;
