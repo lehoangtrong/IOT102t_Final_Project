@@ -1,7 +1,7 @@
-﻿using System.IO.Ports;
+﻿using System;
+using System.Drawing;
+using System.IO.Ports;
 using System.Text;
-using System.Text.RegularExpressions;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 
 namespace StudentManager
 {
@@ -94,51 +94,25 @@ namespace StudentManager
 
         private async void CheckComStatus()
         {
-            while (true)
-            {
-                await Task.Delay(800);
-                if (!serialPort.IsOpen)
-                {
-                    statusLabel.Text = "Đã ngắt kết nối!!";
-                    statusLabel.ForeColor = Color.Red;
-                    serialPort = null;
-                    addButton.Enabled = false;
-                    clearButton.Enabled = false;
-                    textBoxName.Enabled = false;
-                    textBoxStudentID.Enabled = false;
-                    init();
-                    break;
-                }
-            }
+            await Task.Delay(200);
+            while (serialPort == null) await Task.Run(() => FindESP8266());
+            statusLabel.Text = "Đã kết nối với ESP8266 tại " + serialPort.PortName;
+            statusLabel.ForeColor = Color.Green;
+            addButton.Enabled = true;
+            clearButton.Enabled = true;
+            textBoxName.Enabled = true;
+            textBoxStudentID.Enabled = true;
+
         }
 
         private void clearButton_Click(object sender, EventArgs e)
         {
-            serialOutput.Clear();
+
         }
 
         private void addButton_Click(object sender, EventArgs e)
         {
-            if (textBoxName.Text == "" || textBoxStudentID.Text == "")
-            {
-                MessageBox.Show("Vui lòng nhập đầy đủ thông tin");
-                return;
-            }
-            if (Regex.IsMatch(textBoxStudentID.Text, @"^\S{2}\d{6}$") == false)
-            {
-                MessageBox.Show("Mã sinh viên không hợp lệ");
-                return;
-            }
-            serialPort.Write("a" + textBoxName.Text + ";" + textBoxStudentID.Text);
-            while (true)
-            {
-                string response = serialPort.ReadLine().Replace("\r", "");
-                if (response.Equals("DONE")) break;
-                serialOutput.AppendText(response + "\r\n");
-            }
 
-            textBoxName.Text = "Nhập tên sinh viên";
-            textBoxStudentID.Text = "Nhập mã sinh viên";
         }
     }
 }
