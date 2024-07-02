@@ -1,7 +1,7 @@
 ﻿
 namespace StudentManager
 {
-    partial class Form1
+    partial class FingerStudent
     {
         /// <summary>
         ///  Required designer variable.
@@ -149,7 +149,7 @@ namespace StudentManager
             studentId.TabIndex = 11;
             studentId.Text = "Nhập mã sinh viên";
             // 
-            // Form1
+            // FingerStudent
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
@@ -164,8 +164,8 @@ namespace StudentManager
             Controls.Add(addButton);
             Controls.Add(statusLabel);
             Controls.Add(Status);
-            Name = "Form1";
-            Text = "Form1";
+            Name = "FingerStudent";
+            Text = "FingerStudent";
             ResumeLayout(false);
             PerformLayout();
         }

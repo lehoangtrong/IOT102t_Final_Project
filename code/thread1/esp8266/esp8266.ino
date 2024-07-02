@@ -13,7 +13,7 @@
 
 const char *host = "script.google.com";
 const int httpsPort = 443;
-String GAS_ID = "AKfycbziXksUeubaKHlDtbA1ktCBU7BpTTEOtgBh5-AyCyKGpm-bGYcwXGpSUqxjrG6eR2tnfw";
+String GAS_ID = "AKfycbwrPlg8llnoHhIu_0dLCJ6fINCWptultwJGdIlPefFAJxLHR-EpWe-NsNVuNgdRNNdOXQ";
 
 // Fingerprint scanner Pins
 #define Finger_Rx 14 // D5

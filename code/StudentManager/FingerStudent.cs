@@ -5,11 +5,11 @@ using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 
 namespace StudentManager
 {
-    public partial class Form1 : Form
+    public partial class FingerStudent : Form
     {
         private static SerialPort? serialPort;
 
-        public Form1()
+        public FingerStudent()
         {
             InitializeComponent();
             addButton.Enabled = false;
@@ -35,6 +35,7 @@ namespace StudentManager
 
             foreach (string COMPort in COMPorts)
             {
+                port.Dispose();
                 try
                 {
                     port = new SerialPort(COMPort, 115200)
@@ -66,6 +67,8 @@ namespace StudentManager
 
                     MessageBox.Show(e.Message);
                     port.Dispose();
+                    port.Close();
+                    Task.Delay(5000);
                 }
             }
         }
@@ -107,7 +110,7 @@ namespace StudentManager
                 MessageBox.Show("Mã sinh viên không hợp lệ");
                 return;
             }
-            serialPort.Write("a" + textBoxName.Text + ";" + textBoxStudentID.Text);
+            serialPort.Write("a" + textBoxStudentID.Text + ";" + textBoxName.Text);
             while (true)
             {
                 string response = serialPort.ReadLine().Replace("\r", "");
