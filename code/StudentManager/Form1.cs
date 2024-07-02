@@ -1,17 +1,13 @@
-﻿using System;
-using System.Drawing;
-using System.IO.Ports;
+﻿using System.IO.Ports;
 using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Windows.Forms;
+using System.Text.RegularExpressions;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 
 namespace StudentManager
 {
     public partial class Form1 : Form
     {
-        private static SerialPort serialPort;
-        private static bool isWaitingForSerial;
+        private static SerialPort? serialPort;
 
         public Form1()
         {
@@ -23,110 +19,104 @@ namespace StudentManager
             init();
         }
 
-        private void FindESP8266()
+        private async void init()
+        {
+            await Task.Delay(1000);
+            while (serialPort == null) await Task.Run(() => FindDevice());
+            CheckComStatus();
+        }
+
+
+        private void FindDevice()
         {
             string[] COMPorts = SerialPort.GetPortNames();
 
+            SerialPort? port = new SerialPort();
+
             foreach (string COMPort in COMPorts)
             {
-                SerialPort port = new SerialPort(COMPort, 115200)
-                {
-                    NewLine = "\r\n",
-                    Encoding = System.Text.Encoding.UTF8
-                };
-
                 try
                 {
+                    port = new SerialPort(COMPort, 115200)
+                    {
+                        Encoding = System.Text.Encoding.UTF8
+                    };
                     port.Open();
-                    port.Write("c");
-
-                    for (int i = 0; i < 10; i++)
+                    if (port.IsOpen)
                     {
-                        Thread.Sleep(100);
-                        if (port.BytesToRead == 0)
+                        port.Write("c");
+                        string response = port.ReadLine().Replace("\r", "");
+                        if (response == "Connected")
                         {
-                            port.Write("F");
+                            serialPort = port;
+                            Invoke(new Action(() =>
+                            {
+                                statusLabel.Text = "Đã kết nối";
+                                statusLabel.ForeColor = Color.Green;
+                                addButton.Enabled = true;
+                                clearButton.Enabled = true;
+                                textBoxName.Enabled = true;
+                                textBoxStudentID.Enabled = true;
+                            }));
                         }
-                        else break;
-                    }
-                    if (port.BytesToRead == 0)
-                    {
-                        port.Dispose();
-                        continue;
-                    }
-                    string response = port.ReadLine();
-                    if (response == "Connected")
-                    {
-                        serialPort = port;
-                        serialPort.DiscardInBuffer();
-                        return;
                     }
                 }
-                catch (Exception)
+                catch (Exception e)
                 {
-                    continue;
-                }
 
-                port.Dispose();
+                    MessageBox.Show(e.Message);
+                    port.Dispose();
+                }
             }
         }
 
-        private async void init()
+        private async void CheckComStatus()
         {
-            await Task.Delay(200);
-            while (serialPort == null) await Task.Run(() => FindESP8266());
-            statusLabel.Text = "Đã kết nối với ESP8266 tại " + serialPort.PortName;
-            statusLabel.ForeColor = Color.Green;
-            addButton.Enabled = true;
-            clearButton.Enabled = true;
-            textBoxName.Enabled = true;
-            textBoxStudentID.Enabled = true;
-
-            serialPort.DataReceived += new SerialDataReceivedEventHandler(SerialPort_DataReceived);
-        }
-
-        private void SerialPort_DataReceived(object sender, SerialDataReceivedEventArgs e)
-        {
-            string data = serialPort.ReadLine();
-            this.Invoke(new Action(() =>
+            while (true)
             {
-                serialOutput.AppendText(data + Environment.NewLine);
-                if (data.Contains("EXIST"))
+                await Task.Delay(800);
+                if (!serialPort.IsOpen)
                 {
-                    MessageBox.Show("Student already exists. Please try again.");
+                    statusLabel.Text = "Đã ngắt kết nối!!";
+                    statusLabel.ForeColor = Color.Red;
+                    serialPort = null;
+                    addButton.Enabled = false;
+                    clearButton.Enabled = false;
+                    textBoxName.Enabled = false;
+                    textBoxStudentID.Enabled = false;
+                    init();
+                    break;
                 }
-                else if (data.Contains("ADDED"))
-                {
-                    MessageBox.Show("Student added successfully.");
-                }
-                else if (data.Contains("UPDATED"))
-                {
-                    MessageBox.Show("Student updated successfully.");
-                }
-            }));
+            }
         }
 
         private void clearButton_Click(object sender, EventArgs e)
         {
             serialOutput.Clear();
-            textBoxName.Clear();
-            textBoxStudentID.Clear();
         }
 
         private void addButton_Click(object sender, EventArgs e)
         {
-            string studentName = textBoxName.Text;
-            string studentId = textBoxStudentID.Text;
-            // Gửi dữ liệu sinh viên qua cổng serial để thêm sinh viên
-            serialPort.WriteLine($"ADD:{studentName},{studentId}");
-        }
+            if (textBoxName.Text == "" || textBoxStudentID.Text == "")
+            {
+                MessageBox.Show("Vui lòng nhập đầy đủ thông tin");
+                return;
+            }
+            if (Regex.IsMatch(textBoxStudentID.Text, @"^\S{2}\d{6}$") == false)
+            {
+                MessageBox.Show("Mã sinh viên không hợp lệ");
+                return;
+            }
+            serialPort.Write("a" + textBoxName.Text + ";" + textBoxStudentID.Text);
+            while (true)
+            {
+                string response = serialPort.ReadLine().Replace("\r", "");
+                if (response.Equals("DONE")) break;
+                serialOutput.AppendText(response + "\r\n");
+            }
 
-        private void updateButton_Click(object sender, EventArgs e)
-        {
-            string studentName = textBoxName.Text;
-            string studentId = textBoxStudentID.Text;
-            // Gửi dữ liệu sinh viên qua cổng serial để cập nhật sinh viên
-            serialPort.WriteLine($"UPDATE:{studentName},{studentId}");
+            textBoxName.Text = "Nhập tên sinh viên";
+            textBoxStudentID.Text = "Nhập mã sinh viên";
         }
     }
 }
