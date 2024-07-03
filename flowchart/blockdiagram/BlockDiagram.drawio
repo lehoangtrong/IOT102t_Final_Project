@@ -1,0 +1,102 @@
+<mxfile host="app.diagrams.net" modified="2024-07-02T17:49:16.768Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36 Edg/126.0.0.0" etag="rQxQZ6GjJhSbcHljNwU2" version="24.6.4" type="device">
+  <diagram name="Page-1" id="90a13364-a465-7bf4-72fc-28e22215d7a0">
+    <mxGraphModel dx="4346.5" dy="1442" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1.5" pageWidth="1169" pageHeight="826" background="none" math="0" shadow="0">
+      <root>
+        <mxCell id="0" style=";html=1;" />
+        <mxCell id="1" style=";html=1;" parent="0" />
+        <mxCell id="qnAG8VnZ1jBmtq4AGrAi-28" value="&lt;div style=&quot;font-size: 21px;&quot;&gt;&lt;br style=&quot;font-size: 21px;&quot;&gt;&lt;/div&gt;" style="whiteSpace=wrap;html=1;shadow=1;fontSize=21;fillColor=#f5f5f5;strokeColor=#666666;strokeWidth=2;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="-701.5" y="130" width="570" height="850" as="geometry" />
+        </mxCell>
+        <mxCell id="qnAG8VnZ1jBmtq4AGrAi-19" value="&lt;div style=&quot;font-size: 21px;&quot;&gt;&lt;br style=&quot;font-size: 21px;&quot;&gt;&lt;/div&gt;" style="whiteSpace=wrap;html=1;shadow=1;fontSize=21;fillColor=#f5f5f5;strokeColor=#666666;strokeWidth=2;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="-1621.5" y="130" width="890" height="850" as="geometry" />
+        </mxCell>
+        <mxCell id="qnAG8VnZ1jBmtq4AGrAi-1" value="Flame Sensor" style="whiteSpace=wrap;html=1;shadow=1;fontSize=21;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="-1581.5" y="159" width="160" height="86" as="geometry" />
+        </mxCell>
+        <mxCell id="qnAG8VnZ1jBmtq4AGrAi-2" value="PIR Motion Sensor" style="whiteSpace=wrap;html=1;shadow=1;fontSize=21;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="-1581.5" y="305" width="160" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="qnAG8VnZ1jBmtq4AGrAi-4" value="MQ135 Air Quality Sensor" style="whiteSpace=wrap;html=1;shadow=1;fontSize=21;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="-1581.5" y="425" width="160" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="qnAG8VnZ1jBmtq4AGrAi-14" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=21;" edge="1" parent="1" source="qnAG8VnZ1jBmtq4AGrAi-5" target="qnAG8VnZ1jBmtq4AGrAi-12">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="-1041.5" y="208" />
+              <mxPoint x="-1041.5" y="208" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="qnAG8VnZ1jBmtq4AGrAi-15" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=21;" edge="1" parent="1" source="qnAG8VnZ1jBmtq4AGrAi-5" target="qnAG8VnZ1jBmtq4AGrAi-13">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="-1041.5" y="449" />
+              <mxPoint x="-1041.5" y="449" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="qnAG8VnZ1jBmtq4AGrAi-5" value="Arduino UNO R3" style="whiteSpace=wrap;html=1;shadow=1;fontSize=30;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="-1291.5" y="159" width="220" height="336" as="geometry" />
+        </mxCell>
+        <mxCell id="qnAG8VnZ1jBmtq4AGrAi-9" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.002;entryY=0.128;entryDx=0;entryDy=0;entryPerimeter=0;fontSize=21;" edge="1" parent="1" source="qnAG8VnZ1jBmtq4AGrAi-1" target="qnAG8VnZ1jBmtq4AGrAi-5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="qnAG8VnZ1jBmtq4AGrAi-10" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.011;entryY=0.536;entryDx=0;entryDy=0;entryPerimeter=0;fontSize=21;" edge="1" parent="1" source="qnAG8VnZ1jBmtq4AGrAi-2" target="qnAG8VnZ1jBmtq4AGrAi-5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="qnAG8VnZ1jBmtq4AGrAi-11" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.002;entryY=0.896;entryDx=0;entryDy=0;entryPerimeter=0;fontSize=21;" edge="1" parent="1" source="qnAG8VnZ1jBmtq4AGrAi-4" target="qnAG8VnZ1jBmtq4AGrAi-5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="qnAG8VnZ1jBmtq4AGrAi-12" value="LCD Display" style="whiteSpace=wrap;html=1;shadow=1;fontSize=21;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="-941.5" y="165" width="160" height="86" as="geometry" />
+        </mxCell>
+        <mxCell id="qnAG8VnZ1jBmtq4AGrAi-13" value="Servo" style="whiteSpace=wrap;html=1;shadow=1;fontSize=21;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="-941.5" y="406" width="160" height="86" as="geometry" />
+        </mxCell>
+        <mxCell id="qnAG8VnZ1jBmtq4AGrAi-22" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=1;entryDx=0;entryDy=0;fontSize=21;" edge="1" parent="1" source="qnAG8VnZ1jBmtq4AGrAi-16" target="qnAG8VnZ1jBmtq4AGrAi-5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="qnAG8VnZ1jBmtq4AGrAi-24" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=21;" edge="1" parent="1" source="qnAG8VnZ1jBmtq4AGrAi-16" target="qnAG8VnZ1jBmtq4AGrAi-23">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="-1031.5" y="653" />
+              <mxPoint x="-1031.5" y="653" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="qnAG8VnZ1jBmtq4AGrAi-16" value="NodeMCU&lt;div style=&quot;font-size: 30px;&quot;&gt;(ESP8266-12E)&lt;/div&gt;" style="whiteSpace=wrap;html=1;shadow=1;fontSize=30;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="-1291.5" y="595" width="220" height="336" as="geometry" />
+        </mxCell>
+        <mxCell id="qnAG8VnZ1jBmtq4AGrAi-18" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=21;" edge="1" parent="1" source="qnAG8VnZ1jBmtq4AGrAi-17" target="qnAG8VnZ1jBmtq4AGrAi-16">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="qnAG8VnZ1jBmtq4AGrAi-17" value="AS608 Optical Fingerprint Sensor" style="whiteSpace=wrap;html=1;shadow=1;fontSize=21;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="-1581.5" y="712" width="160" height="102" as="geometry" />
+        </mxCell>
+        <mxCell id="qnAG8VnZ1jBmtq4AGrAi-23" value="OLED Display" style="whiteSpace=wrap;html=1;shadow=1;fontSize=21;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="-941.5" y="610" width="160" height="86" as="geometry" />
+        </mxCell>
+        <mxCell id="qnAG8VnZ1jBmtq4AGrAi-25" value="Google Sheet" style="whiteSpace=wrap;html=1;shadow=1;fontSize=44;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="-581.5" y="159" width="400" height="771" as="geometry" />
+        </mxCell>
+        <mxCell id="qnAG8VnZ1jBmtq4AGrAi-27" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=21;" edge="1" parent="1" source="qnAG8VnZ1jBmtq4AGrAi-26" target="qnAG8VnZ1jBmtq4AGrAi-25">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="-641.5" y="888" />
+              <mxPoint x="-641.5" y="888" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="qnAG8VnZ1jBmtq4AGrAi-26" value="Wi-Fi" style="whiteSpace=wrap;html=1;shadow=1;fontSize=21;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="-1101.5" y="870" width="70" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="qnAG8VnZ1jBmtq4AGrAi-29" value="Hardware &amp;amp; Software" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontStyle=1;fontSize=15;" vertex="1" parent="1">
+          <mxGeometry x="-1610" y="940" width="170" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="qnAG8VnZ1jBmtq4AGrAi-30" value="Connectivity" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontStyle=1;fontSize=15;" vertex="1" parent="1">
+          <mxGeometry x="-691.5" y="940" width="110" height="30" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

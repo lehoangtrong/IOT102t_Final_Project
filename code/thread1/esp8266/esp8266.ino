@@ -13,6 +13,7 @@
 
 const char *host = "script.google.com";
 const int httpsPort = 443;
+String GAS_ID = "AKfycbwrPlg8llnoHhIu_0dLCJ6fINCWptultwJGdIlPefFAJxLHR-EpWe-NsNVuNgdRNNdOXQ";
 
 // Fingerprint scanner Pins
 #define Finger_Rx 14 // D5
@@ -26,16 +27,14 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 SoftwareSerial mySerial(Finger_Rx, Finger_Tx);
 Adafruit_Fingerprint finger = Adafruit_Fingerprint(&mySerial);
 
-const char *ssid = "FPT_Error";
-const char *password = "nonepassword";
+const char *ssid = "LeHoangTrong_EXT";
+const char *password = "Lehoangtrong1905";
 
 WiFiClientSecure client;
 
-void fingerSystem();                // take attendance by fingerprint
-void displayOled(uint8_t choice);   // display oled
-bool checkStudent(int fingerID);    // check student by fingerID
-string getStudent(String response); // get studentID, studentName
-void UARTSend(String data);         // send data to arduino uno
+void fingerSystem();              // take attendance by fingerprint
+void displayOled(uint8_t choice); // display oled
+bool checkStudent(int fingerID);  // check student by fingerID
 
 void setup()
 {
@@ -87,7 +86,11 @@ void setup()
   Serial.println("IP address: ");
   Serial.println(WiFi.localIP());
 
-  client.setInsecure(); // set client to use http
+  // Set client to connect to google sheet with https
+  client.setInsecure();
+  client.setNoDelay(true);
+
+  delay(1000);
 }
 
 void loop()
@@ -157,14 +160,13 @@ void fingerSystem()
     if (checkStudent(finger.fingerID))
     {
       display.clearDisplay();
-      display.setTextSize(1);
+      display.setTextSize(2);
       display.setTextColor(SSD1306_WHITE);
       display.setCursor(0, 0);
       display.println("Finger ID: " + String(finger.fingerID));
+      display.setCursor(0, 32);
+      display.println("Welcome");
       display.display();
-
-      // Open door send to arduino uno to open door follow UART
-      UARTSend("OPEN 90\r\n");
     }
     delay(1000);
   }
@@ -270,16 +272,11 @@ bool checkStudent(int fingerID)
   }
   else
   {
-    Serial.println("Connect success");
-
-    String url = "/macros/s/" + GAS_ID + "/exec?type=getStudentByFingerPrint&fingerID=" + String(fingerID);
+    Serial.println("Connected to Google Sheets");
+    String url = "/macros/s/" + GAS_ID + "/exec?type=takeAttendant&fingerID=" + fingerID;
+    Serial.print("Requesting URL: ");
     Serial.println(url);
-
-    client.print(String("GET ") + url + " HTTP/1.1\r\n" +
-                 "Host: " + host + "\r\n" +
-                 "Connection: close\r\n\r\n");
-
-    // Read the response
+    client.print(String("GET ") + url + " HTTP/1.1\r\n" + "Host: " + host + "\r\n" + "User-Agent: BuildFailureDetectorESP8266\r\n" + "Connection: close\r\n\r\n");
     while (client.connected())
     {
       String line = client.readStringUntil('\n');
@@ -289,64 +286,11 @@ bool checkStudent(int fingerID)
         break;
       }
     }
-
-    String response = client.readString();
-    Serial.println(response);
-
-    // Parse JSON
-    int index = response.indexOf("studentID");
-    if (index != -1)
-    {
-      url = "/macros/s/" + GAS_ID + "/exec?type=takeAttendant" + getStudent(response);
-      Serial.println(url);
-
-      client.print(String("GET ") + url + " HTTP/1.1\r\n" +
-                   "Host: " + host + "\r\n" +
-                   "Connection: close\r\n\r\n");
-
-      response = client.readString();
-
-      // read the response if Attendant taken => return true
-      if (response.indexOf("Attendant taken") != -1)
-      {
-        check = true;
-        display.clearDisplay();
-        display.setTextSize(1);
-        display.setTextColor(SSD1306_WHITE);
-        display.setCursor(0, 0);
-        display.println("Student ID: " + studentID);
-        display.setCursor(0, 20);
-        display.println("Student Name: " + studentName);
-        display.display();
-        delay(1000);
-
-        Serial.print("OPEN 90\r\n");
-      }
-    }
-    else
-    {
-      displayOled(fingerprint_invalid_icon);
-      Serial.println("Student not found");
-      delay(1000);
-    }
+    client.stop();
+    Serial.println("OPEN");
+    delay(500);
+    Serial.println("OPEN"); // double check
+    check = true;
   }
-
   return check;
-}
-
-string getStudent(String response)
-{
-  int index = response.indexOf("studentID");
-  int index2 = response.indexOf("studentName");
-
-  String studentID = response.substring(index + 12, index2 - 4);               // 12 is length of "studentID": "
-                                                                               // 4 is length of ",\n"
-  String studentName = response.substring(index2 + 14, response.length() - 3); // 14 is length of "studentName": "
-                                                                               // 3 is length of "\n}
-  return "&studentID=" + studentID + "&studentName=" + studentName;
-}
-
-void UARTSend(String data)
-{
-  Serial.print(data);
 }

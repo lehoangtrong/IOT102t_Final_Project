@@ -1,7 +1,6 @@
 #include <SoftwareSerial.h>
 #include <LiquidCrystal_I2C.h>
 #include <Servo.h>
-#include <SerialCommand.h>
 
 #define PIN_FIRE_SENSOR 6
 #define PIN_PIR_SENSOR 7
@@ -12,12 +11,10 @@ uint8_t fireSensorValue = 0;
 uint8_t pirSensorValue = 0;
 uint8_t airSensorValue = 0;
 
-SerialCommand sCmd;
 LiquidCrystal_I2C lcd(0x27, 16, 2);
 Servo servoMotor;
 
 bool checkSensorFire(); // Kiểm tra cảm biến cháy
-void UARTReceive();     // Nhận dữ liệu từ esp8266
 
 void setup()
 {
@@ -27,10 +24,8 @@ void setup()
   pinMode(PIN_FIRE_SENSOR, INPUT);
   pinMode(PIN_PIR_SENSOR, INPUT);
   pinMode(PIN_AIR_SENSOR, INPUT);
-  pinMode(PIN_SERVO_MOTOR, OUTPUT);
-
+  servoMotor.attach(PIN_SERVO_MOTOR);
   Serial.begin(115200);
-  sCmd.addCommand("Open", UARTReceive);
 }
 
 void loop()
@@ -51,12 +46,18 @@ void loop()
     lcd.print("Please call 911");
 
     // Open door
-    servoMotor.attach(PIN_SERVO_MOTOR);
     servoMotor.write(90);
+    delay(3000);
   }
   else
   {
     Serial.println("System is safe!");
+
+    Serial.println("====================================");
+    Serial.println("Fire sensor: " + String(fireSensorValue));
+    Serial.println("PIR sensor: " + String(pirSensorValue));
+    Serial.println("Air sensor: " + String(airSensorValue));
+    Serial.println("====================================");
 
     lcd.clear();
     lcd.setCursor(0, 0);
@@ -65,17 +66,27 @@ void loop()
     lcd.print("Welcome FPT classroom!");
 
     // Close door
-    servoMotor.attach(PIN_SERVO_MOTOR);
     servoMotor.write(0);
   }
+  if (Serial.available() > 0)
+  { // read from esp8266
+    String data = Serial.readString().substring(0, 4);
+    Serial.println(data);
+    if (data.equals("OPEN"))
+    {
+      servoMotor.write(90);
+      delay(3000); // maybe can change read sensor value to check door is open or close
 
-  sCmd.readSerial();
+      servoMotor.write(0);
+    }
+  }
+  delay(1000);
 }
 
 bool checkSensorValue()
 {
   bool check = false;
-  if (fireSensorValue == 1 || airSensorValue > 400)
+  if (fireSensorValue == 1 || airSensorValue > 400 || airSensorValue < 40)
   {
     if (pirSensorValue == 1)
     {
@@ -87,28 +98,4 @@ bool checkSensorValue()
     }
   }
   return check;
-}
-
-void UARTReceive()
-{
-  char *arg;
-  arg = sCmd.next();
-  // command is Open 90
-  if (arg != NULL)
-  {
-    if (strcmp(arg, "Open") == 0)
-    {
-      arg = sCmd.next();
-      if (arg != NULL)
-      {
-        int angle = atoi(arg);
-        servoMotor.attach(PIN_SERVO_MOTOR);
-        servoMotor.write(angle);
-
-        // Delay 2s
-        delay(2000);
-        servoMotor.write(0);
-      }
-    }
-  }
 }
