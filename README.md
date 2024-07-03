@@ -4,16 +4,14 @@ Dự án Smart Classroom (Phòng học thông minh) là một dự án hỗ tr�
 Là một thiết bị nhỏ trong việc điểm danh sinh viên cũng như hỗ trợ về vấn đề an toàn trong phòng học.
 
 ## Lưu ý
-
-Với board Arduino Uno R3 chính hãng sẽ không chạy ổn định, nhất là trên Windows 8.1 (nghe vô lý không?). Để tránh lỗi vui lòng không rút dây USB trong quá trình ứng dụng chạy. Chỉ rút sau khi đã hoàn tất công việc trên ứng dụng. Tất nhiên rồi. Board clone sử dụng CH340G sẽ ổn định hơn, nhưng yêu cầu cài driver. Trường hợp sử dụng clone CH340G vui lòng chọn cài CH34X Driver khi cài ứng dụng, rồi ấn nút Install trong ô cửa sổ hiện lên.
+Để tránh lỗi vui lòng không rút dây USB trong quá trình ứng dụng chạy. Chỉ rút sau khi đã hoàn tất công việc trên ứng dụng. Tất nhiên rồi. Board clone sử dụng CH340G sẽ ổn định hơn, nhưng yêu cầu cài driver. Trường hợp sử dụng clone CH340G vui lòng chọn cài CH34X Driver khi cài ứng dụng, rồi ấn nút Install trong ô cửa sổ hiện lên.
 
 Nếu sử dụng Arduino chính hãng nhưng máy không nhận, vui lòng chọn cài Arduino Driver, và làm theo hướng dẫn trong ô cửa sổ hiện lên.
 
 Trong dự án này, sử dụng 2 luồng dữ liệu là đăng kí và điểm danh cũng như là các vấn đề an toàn trong phòng học hiện nay.
 
-## Cách tạo mạch Arduino UNO
-
-## Cách tạo mạch ESP8266
+## Cách tạo mạch
+![Schema](https://github.com/lehoangtrong/IOT102t_Final_Project/raw/coupstrong/flowchart/image/Circuit%20schematic.png)
 
 ## Upload sketch
 
