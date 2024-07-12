@@ -9,9 +9,10 @@
 #include "defind.h"
 
 // Wifi library
+#include "HTTPSRedirect.h"
 #include <WiFiClientSecure.h>
 
-String host = "script.google.com";
+const char *host = "script.google.com";
 const int httpsPort = 443;
 String GAS_ID = "AKfycbwrPlg8llnoHhIu_0dLCJ6fINCWptultwJGdIlPefFAJxLHR-EpWe-NsNVuNgdRNNdOXQ";
 
@@ -27,19 +28,34 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 SoftwareSerial mySerial(Finger_Rx, Finger_Tx);
 Adafruit_Fingerprint finger = Adafruit_Fingerprint(&mySerial);
 
-const char *ssid = "LeHoangTrong_EXT";
-const char *password = "Lehoangtrong1905";
+const char *ssid = "FPT_Error";
+const char *password = "nonepassword";
+String enrollStudent = String("/macros/s/") + GAS_ID + "/exec?type=enrollStudent&";
 
-WiFiClientSecure client;
+HTTPSRedirect *client = nullptr;
 
-void displayOled(uint8_t choice); // display oled
-void clearBuffer();               // clear buffer
-uint8_t addFingerPrint();         // add fingerprint
+void displayOled(uint8_t choice);   // display oled
+void clearBuffer();                 // clear buffer
+uint8_t addFingerPrint();           // add fingerprint
+void connectToGoogleSheet();        // connect to google sheet
+String sendGoogleSheet(String url); // send data to google sheet
 
 void setup()
 {
   Serial.begin(115200);
   delay(10);
+  while (true)
+  {
+    if (Serial.available() > 0)
+    {
+      char received = Serial.read();
+      if (received == 'c')
+      {
+        Serial.println("Connected");
+        break;
+      }
+    }
+  }
   if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C))
   {
     Serial.println(F("SSD1306 allocation failed"));
@@ -71,22 +87,20 @@ void setup()
   Serial.println();
   Serial.print("Connecting to ");
   Serial.println(ssid);
-
   WiFi.begin(ssid, password);
   Serial.println("Connecting");
   while (WiFi.status() != WL_CONNECTED)
   {
     displayOled(wifi_connect_icon);
     delay(500);
-    Serial.print(".");
+    Serial.println(".");
   }
   displayOled(wifi_connected_icon);
   Serial.println("");
   Serial.println("WiFi connected");
   Serial.println("IP address: ");
   Serial.println(WiFi.localIP());
-
-  client.setInsecure(); // set client to use http
+  Serial.println("DONE");
 }
 
 void loop()
@@ -99,6 +113,7 @@ void loop()
       if (received == 'c')
       {
         Serial.println("Connected");
+        Serial.println("DONE");
         break;
       }
       else if (received == 'a')
@@ -131,6 +146,7 @@ void loop()
 
 uint8_t addFingerPrint()
 {
+  bool check = true;
   finger.getTemplateCount();
   uint8_t id = finger.templateCount + 1;
 
@@ -170,12 +186,20 @@ uint8_t addFingerPrint()
     break;
   case FINGERPRINT_PACKETRECIEVEERR:
     Serial.println("Lỗi nhận gói vân tay");
-    return p;
+    check = false;
+    break;
   case FINGERPRINT_ENROLLMISMATCH:
     Serial.println("Không trùng khớp");
-    return p;
+    check = false;
+    break;
   default:
     Serial.println("Không rõ lỗi");
+    check = false;
+    break;
+  }
+  if (!check)
+  {
+    Serial.println("DONE");
     return p;
   }
 
@@ -190,15 +214,24 @@ uint8_t addFingerPrint()
     break;
   case FINGERPRINT_PACKETRECIEVEERR:
     Serial.println("Lỗi giao tiếp");
-    return p;
+    check = false;
+    break;
   case FINGERPRINT_BADLOCATION:
     Serial.println("Không thể lưu trữ");
-    return p;
+    check = false;
+    break;
   case FINGERPRINT_FLASHERR:
     Serial.println("Lỗi viết bộ nhớ");
-    return p;
+    check = false;
+    break;
   default:
     Serial.println("Lỗi không rõ");
+    check = false;
+    break;
+  }
+  if (!check)
+  {
+    Serial.println("DONE");
     return p;
   }
   return id;
@@ -208,11 +241,10 @@ void displayOled(uint8_t choice)
 {
   if (choice == 1)
   {
-    // show username of wifi
     display.clearDisplay();
-    display.setTextSize(1);      // Normal 1:1 pixel scale
-    display.setTextColor(WHITE); // Draw white text
-    display.setCursor(0, 0);     // Start at top-left corner
+    display.setTextSize(1);
+    display.setTextColor(WHITE);
+    display.setCursor(0, 0);
     display.print(F("Connecting to \n"));
     display.setCursor(0, 50);
     display.setTextSize(2);
@@ -225,9 +257,9 @@ void displayOled(uint8_t choice)
   if (choice == 2)
   {
     display.clearDisplay();
-    display.setTextSize(2);      // Normal 1:1 pixel scale
-    display.setTextColor(WHITE); // Draw white text
-    display.setCursor(8, 0);     // Start at top-left corner
+    display.setTextSize(2);
+    display.setTextColor(WHITE);
+    display.setCursor(8, 0);
     display.print(F("Connected \n"));
     display.drawBitmap(33, 15, Wifi_connected_bits, Wifi_connected_width, Wifi_connected_height, WHITE);
     display.display();
@@ -325,31 +357,55 @@ bool sendGoogleSheet(String name, String studentID, String fingerID)
 {
   bool result = false;
   Serial.println("Đang kết nối tới Google Sheets");
-  if (!client.connect(host, httpsPort))
+  connectToGoogleSheet();
+  Serial.println("Đã kết nối tới Google Sheets");
+  String url = enrollStudent + "studentID=" + studentID + "&studentName=" + urlEncode(name) + "&fingerID=" + fingerID;
+  Serial.println("Đang gửi yêu cầu tới Google Sheets" + url);
+  String response = sendGoogleSheet(url);
+  if (response.indexOf("enroll success") != -1)
   {
-    Serial.println("Kết nối thất bại vui lòng thử lại sau");
-    return false;
+    result = true;
+  }
+  else if (response.indexOf("studentID exist") != -1)
+  {
+    result = false;
   }
   else
   {
-    Serial.println("Kết nối thành công");
-    String url = "/macros/s/" + GAS_ID + "/exec?type=enrollStudent&studentID=" + studentID + "&studentName=" + urlEncode(name) + "&fingerID=" + fingerID;
-    Serial.print("Requesting URL: ");
-    Serial.println(url);
-    client.print(String("GET ") + url + " HTTP/1.1\r\n" + "Host: " + host + "\r\n" + "User-Agent: BuildFailureDetectorESP8266\r\n" + "Connection: close\r\n\r\n");
-    delay(5000);
-    while (client.connected())
-    {
-      String line = client.readStringUntil('\n');
-      if (line == "\r")
-      {
-        Serial.println("Headers received");
-        break;
-      }
-    }
-    // TODO: Read the response
-    result = true;
+    sendGoogleSheet(name, studentID, fingerID);
   }
-
   return result;
+}
+
+String sendGoogleSheet(String url)
+{
+  String respone = "";
+  if (client->GET(url, host))
+  {
+    Serial.println("Yêu cầu GET thành công");
+    Serial.println("Respone:");
+    Serial.println(client->getResponseBody());
+    respone = client->getResponseBody();
+  }
+  else
+  {
+    Serial.println("Yêu cầu GET thất bại");
+  }
+  return respone;
+}
+
+void connectToGoogleSheet()
+{
+  if (client == nullptr)
+  {
+    client = new HTTPSRedirect(httpsPort);
+    client->setInsecure();
+
+    client->setPrintResponseBody(false);
+    client->setContentTypeHeader("application/json");
+  }
+  if (!client->connected())
+  {
+    client->connect(host, httpsPort);
+  }
 }
