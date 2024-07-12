@@ -7,7 +7,7 @@ namespace StudentManager
 {
     public partial class FingerStudent : Form
     {
-        private static SerialPort? serialPort;
+        private static SerialPort? serialPort = null;
 
         public FingerStudent()
         {
@@ -22,7 +22,11 @@ namespace StudentManager
         private async void init()
         {
             await Task.Delay(1000);
-            while (serialPort == null) await Task.Run(() => FindDevice());
+            while (serialPort == null)
+            {
+                await Task.Run(() => FindDevice());
+            }
+            ReadSerial();
             CheckComStatus();
         }
 
@@ -40,12 +44,18 @@ namespace StudentManager
                 {
                     port = new SerialPort(COMPort, 115200)
                     {
-                        Encoding = System.Text.Encoding.UTF8
+                        NewLine = "\r\n",
+                        Encoding = System.Text.Encoding.UTF8,
+                        ReadTimeout = 1000,
+                        WriteTimeout = 1000
                     };
                     port.Open();
                     if (port.IsOpen)
                     {
+                        port.DiscardInBuffer();
                         port.Write("c");
+                        port.NewLine = "\r\n";
+                        // Read the response from the device if read timeout is not reached
                         string response = port.ReadLine().Replace("\r", "");
                         if (response == "Connected")
                         {
@@ -64,11 +74,37 @@ namespace StudentManager
                 }
                 catch (Exception e)
                 {
-
-                    MessageBox.Show(e.Message);
                     port.Dispose();
-                    port.Close();
                     Task.Delay(5000);
+                }
+            }
+        }
+        private async void ReadSerial()
+        {
+            while (true)
+            {
+                await Task.Delay(100);
+                if (serialPort != null && serialPort.IsOpen)
+                {
+                    try
+                    {
+                        string response = serialPort.ReadLine().Replace("\r", "");
+                        if (response.Contains("DONE"))
+                        {
+                            return;
+                        }
+                        if (response != "")
+                        {
+                            Invoke(new Action(() =>
+                            {
+                                serialOutput.AppendText(response + "\r\n");
+                            }));
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        
+                    }
                 }
             }
         }
@@ -78,10 +114,12 @@ namespace StudentManager
             while (true)
             {
                 await Task.Delay(800);
-                if (!serialPort.IsOpen)
+                if (serialPort == null || !serialPort.IsOpen)
                 {
                     statusLabel.Text = "Đã ngắt kết nối!!";
                     statusLabel.ForeColor = Color.Red;
+                    serialPort.Dispose();
+                    serialPort.Close();
                     serialPort = null;
                     addButton.Enabled = false;
                     clearButton.Enabled = false;
@@ -111,13 +149,7 @@ namespace StudentManager
                 return;
             }
             serialPort.Write("a" + textBoxStudentID.Text + ";" + textBoxName.Text);
-            while (true)
-            {
-                string response = serialPort.ReadLine().Replace("\r", "");
-                if (response.Equals("DONE")) break;
-                serialOutput.AppendText(response + "\r\n");
-            }
-
+            ReadSerial();
             textBoxName.Text = "Nhập tên sinh viên";
             textBoxStudentID.Text = "Nhập mã sinh viên";
         }

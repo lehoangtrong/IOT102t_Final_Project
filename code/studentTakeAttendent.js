@@ -1,5 +1,4 @@
-const sheetID =
-  "AKfycbziXksUeubaKHlDtbA1ktCBU7BpTTEOtgBh5-AyCyKGpm-bGYcwXGpSUqxjrG6eR2tnfw";
+const sheetID = "11zydyUnpu7Gi1B4aFzKH0uMxLvV92aLwtLXHI0aQTAQ";
 
 function doGet(e) {
   var result = "done";
@@ -13,24 +12,39 @@ function doGet(e) {
     var sheet = SpreadsheetApp.openById(sheetID).getSheetByName("students");
     var data = sheet.getDataRange().getValues();
     var studentID = null;
+    var studentName = null;
     for (var i = 1; i < data.length; i++) {
       if (data[i][3] == fingerID) {
+        result = {
+          studentID: data[i][1],
+          studentName: data[i][2],
+          fingerID: data[i][3],
+        };
         studentID = data[i][1];
+        studentName = data[i][2];
         break;
       }
     }
-    var date = new Date();
-    var currentDate = Utilities.formatDate(date, "GMT+7", "dd/MM/yyyy");
+    if (result != "done") {
+      var date = new Date();
+      var currentDate = Utilities.formatDate(date, "GMT+7", "dd/MM/yyyy");
 
-    var currentTime = Utilities.formatDate(date, "GMT+7", "HH:mm:ss");
+      var currentTime = Utilities.formatDate(date, "GMT+7", "HH:mm:ss");
 
-    var sheet =
-      SpreadsheetApp.openById(sheetID).getSheetByName("takeAttendant");
+      var sheet =
+        SpreadsheetApp.openById(sheetID).getSheetByName("takeAttendant");
 
-    var lastRow = sheet.getLastRow() + 1;
-    sheet.appendRow([lastRow, studentID, currentDate, currentTime]);
-
-    result = "Attendant taken";
+      var lastRow = sheet.getLastRow() + 1;
+      sheet.appendRow([
+        lastRow,
+        studentID,
+        studentName,
+        currentDate,
+        currentTime,
+      ]);
+    } else {
+      result = "fingerID not found";
+    }
   } else if (e.parameter.type == "enrollStudent") {
     var studentID = e.parameter.studentID;
     var studentName = e.parameter.studentName;
@@ -72,9 +86,9 @@ function doGet(e) {
     for (var i = 1; i < data.length; i++) {
       if (data[i][3] == fingerID) {
         result = {
-          studentID: data[i][2],
-          studentName: data[i][3],
-          fingerID: data[i][4],
+          studentID: data[i][1],
+          studentName: data[i][2],
+          fingerID: data[i][3],
         };
         break;
       }
@@ -86,7 +100,5 @@ function doGet(e) {
   } else {
     result = "error";
   }
-  return ContentService.createTextOutput(JSON.stringify(result)).setMimeType(
-    ContentService.MimeType.JSON
-  );
+  return ContentService.createTextOutput(JSON.stringify(result));
 }

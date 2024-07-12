@@ -7,8 +7,10 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 #include "defind.h"
+// FONT vi
 
 // Wifi library
+#include "HTTPSRedirect.h"
 #include <WiFiClientSecure.h>
 
 const char *host = "script.google.com";
@@ -27,14 +29,18 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 SoftwareSerial mySerial(Finger_Rx, Finger_Tx);
 Adafruit_Fingerprint finger = Adafruit_Fingerprint(&mySerial);
 
-const char *ssid = "LeHoangTrong_EXT";
-const char *password = "Lehoangtrong1905";
+const char *ssid = "FPT_Error";
+const char *password = "nonepassword";
+String takeAttendant = String("/macros/s/") + GAS_ID + "/exec?type=takeAttendant&";
+String getStudentByFingerID = String("/macros/s/") + GAS_ID + "/exec?type=getStudentByFingerPrint&";
 
-WiFiClientSecure client;
+HTTPSRedirect *client = nullptr;
 
-void fingerSystem();              // take attendance by fingerprint
-void displayOled(uint8_t choice); // display oled
-bool checkStudent(int fingerID);  // check student by fingerID
+void fingerSystem();                // take attendance by fingerprint
+void displayOled(uint8_t choice);   // display oled
+bool checkStudent(int fingerID);    // check student by fingerID
+void connectToGoogleSheet();        // connect to google sheet
+String sendGoogleSheet(String url); // send data to google sheet
 
 void setup()
 {
@@ -85,10 +91,6 @@ void setup()
   Serial.println("WiFi connected");
   Serial.println("IP address: ");
   Serial.println(WiFi.localIP());
-
-  // Set client to connect to google sheet with https
-  client.setInsecure();
-  client.setNoDelay(true);
 
   delay(1000);
 }
@@ -159,14 +161,31 @@ void fingerSystem()
 
     if (checkStudent(finger.fingerID))
     {
+      Serial.println("Attendant taken");
+      String student = sendGoogleSheet(getStudentByFingerID + "fingerID=" + finger.fingerID);
+      // {"studentID":"QE180205","studentName":"Vũ Thị Kim Liên","fingerID":21}
+      String studentID = student.substring(student.indexOf("studentID") + 12, student.indexOf("studentName") - 3);
+      String studentName = student.substring(student.indexOf("studentName") + 15, student.indexOf("fingerID") - 3);
       display.clearDisplay();
-      display.setTextSize(2);
-      display.setTextColor(SSD1306_WHITE);
+      display.setTextSize(1);
+      display.setTextColor(WHITE);
       display.setCursor(0, 0);
-      display.println("Finger ID: " + String(finger.fingerID));
-      display.setCursor(0, 32);
-      display.println("Welcome");
+      display.print(F("Student ID: "));
+      display.setCursor(0, 10);
+      display.print(studentID);
+      display.setCursor(0, 20);
+      display.print(F("Student Name: "));
+      display.setCursor(0, 30);
+      display.print(studentName);
       display.display();
+
+      Serial.println("OPEN");
+      delay(500);
+      Serial.println("OPEN");
+    }
+    else
+    {
+      Serial.println("Attendant not taken");
     }
     delay(1000);
   }
@@ -265,32 +284,54 @@ bool checkStudent(int fingerID)
 
   Serial.print("connecting to ");
   Serial.println(host);
-
-  if (!client.connect(host, httpsPort))
+  connectToGoogleSheet();
+  String url = takeAttendant + "fingerID=" + fingerID;
+  String response = sendGoogleSheet(url);
+  if (response.indexOf("Attendant taken") != -1)
   {
-    Serial.println("connection failed");
+    check = true;
+  }
+  else if (response.indexOf("FingerID not found") != -1)
+  {
+    check = false;
   }
   else
   {
-    Serial.println("Connected to Google Sheets");
-    String url = "/macros/s/" + GAS_ID + "/exec?type=takeAttendant&fingerID=" + fingerID;
-    Serial.print("Requesting URL: ");
-    Serial.println(url);
-    client.print(String("GET ") + url + " HTTP/1.1\r\n" + "Host: " + host + "\r\n" + "User-Agent: BuildFailureDetectorESP8266\r\n" + "Connection: close\r\n\r\n");
-    while (client.connected())
-    {
-      String line = client.readStringUntil('\n');
-      if (line == "\r")
-      {
-        Serial.println("Headers received");
-        break;
-      }
-    }
-    client.stop();
-    Serial.println("OPEN");
-    delay(500);
-    Serial.println("OPEN"); // double check
-    check = true;
+    checkStudent(fingerID);
   }
+
   return check;
+}
+
+String sendGoogleSheet(String url)
+{
+  String respone = "";
+  if (client->GET(url, host))
+  {
+    Serial.println("Yêu cầu GET thành công");
+    Serial.println("Respone:");
+    Serial.println(client->getResponseBody());
+    respone = client->getResponseBody();
+  }
+  else
+  {
+    Serial.println("Yêu cầu GET thất bại");
+  }
+  return respone;
+}
+
+void connectToGoogleSheet()
+{
+  if (client == nullptr)
+  {
+    client = new HTTPSRedirect(httpsPort);
+    client->setInsecure();
+
+    client->setPrintResponseBody(false);
+    client->setContentTypeHeader("application/json");
+  }
+  if (!client->connected())
+  {
+    client->connect(host, httpsPort);
+  }
 }
