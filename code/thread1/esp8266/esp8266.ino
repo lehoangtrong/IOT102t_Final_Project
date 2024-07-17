@@ -38,7 +38,7 @@ HTTPSRedirect *client = nullptr;
 
 void fingerSystem();                // take attendance by fingerprint
 void displayOled(uint8_t choice);   // display oled
-bool checkStudent(int fingerID);    // check student by fingerID
+String checkStudent(int fingerID);  // check student by fingerID
 void connectToGoogleSheet();        // connect to google sheet
 String sendGoogleSheet(String url); // send data to google sheet
 
@@ -63,7 +63,7 @@ void setup()
   else
   {
     Serial.println("Did not find fingerprint sensor :(");
-    while (1)
+    for (;;)
       ;
   }
 
@@ -98,6 +98,7 @@ void setup()
 void loop()
 {
   fingerSystem(); // take attendance by fingerprint
+  yield();
 }
 
 void fingerSystem()
@@ -158,11 +159,12 @@ void fingerSystem()
     Serial.println(finger.confidence);
 
     displayOled(fingerprint_valid_icon);
+    String response = checkStudent(finger.fingerID);
 
-    if (checkStudent(finger.fingerID))
+    if (response.indexOf("studentID") != -1)
     {
       Serial.println("Attendant taken");
-      String student = sendGoogleSheet(getStudentByFingerID + "fingerID=" + finger.fingerID);
+      String student = response;
       // {"studentID":"QE180205","studentName":"Vũ Thị Kim Liên","fingerID":21}
       String studentID = student.substring(student.indexOf("studentID") + 12, student.indexOf("studentName") - 3);
       String studentName = student.substring(student.indexOf("studentName") + 15, student.indexOf("fingerID") - 3);
@@ -176,7 +178,7 @@ void fingerSystem()
       display.setCursor(0, 20);
       display.print(F("Student Name: "));
       display.setCursor(0, 30);
-      display.print(studentName);
+      display.print(studentName); // TODO: Encode UTF-8 not working
       display.display();
 
       Serial.println("OPEN");
@@ -278,16 +280,14 @@ void displayOled(uint8_t choice)
   }
 }
 
-bool checkStudent(int fingerID)
+String checkStudent(int fingerID)
 {
   bool check = false;
-
-  Serial.print("connecting to ");
-  Serial.println(host);
-  connectToGoogleSheet();
+  // Serial.print("connecting to ");
+  // Serial.println(host);
   String url = takeAttendant + "fingerID=" + fingerID;
   String response = sendGoogleSheet(url);
-  if (response.indexOf("Attendant taken") != -1)
+  if (response.indexOf("studentID") != -1)
   {
     check = true;
   }
@@ -300,22 +300,23 @@ bool checkStudent(int fingerID)
     checkStudent(fingerID);
   }
 
-  return check;
+  return check ? response : "";
 }
 
 String sendGoogleSheet(String url)
 {
+  connectToGoogleSheet();
   String respone = "";
   if (client->GET(url, host))
   {
-    Serial.println("Yêu cầu GET thành công");
-    Serial.println("Respone:");
-    Serial.println(client->getResponseBody());
+    // Serial.println("Yêu cầu GET thành công");
+    // Serial.println("Respone:");
+    // Serial.println(client->getResponseBody());
     respone = client->getResponseBody();
   }
   else
   {
-    Serial.println("Yêu cầu GET thất bại");
+    // Serial.println("Yêu cầu GET thất bại");
   }
   return respone;
 }

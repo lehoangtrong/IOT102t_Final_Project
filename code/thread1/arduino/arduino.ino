@@ -18,6 +18,8 @@ bool checkSensorFire(); // Kiểm tra cảm biến cháy
 
 void setup()
 {
+  Serial.begin(115200);
+
   lcd.init();
   lcd.backlight();
 
@@ -25,7 +27,6 @@ void setup()
   pinMode(PIN_PIR_SENSOR, INPUT);
   pinMode(PIN_AIR_SENSOR, INPUT);
   servoMotor.attach(PIN_SERVO_MOTOR);
-  Serial.begin(115200);
 }
 
 void loop()
@@ -38,6 +39,12 @@ void loop()
   if (checkSensorValue())
   {
     Serial.println("System is not safe!!!!!");
+
+    Serial.println("====================================");
+    Serial.println("Fire sensor: " + String(fireSensorValue));
+    Serial.println("PIR sensor: " + String(pirSensorValue));
+    Serial.println("Air sensor: " + String(airSensorValue));
+    Serial.println("====================================");
 
     lcd.clear();
     lcd.setCursor(0, 0);
@@ -68,11 +75,12 @@ void loop()
     // Close door
     servoMotor.write(0);
   }
-  if (Serial.available() > 0)
-  { // read from esp8266
-    String data = Serial.readString().substring(0, 4);
+
+  if (Serial.available())
+  {
+    String data = Serial.readStringUntil('\n');
     Serial.println(data);
-    if (data.equals("OPEN"))
+    if (data.indexOf("OPEN") >= 0)
     {
       servoMotor.write(90);
       delay(3000); // maybe can change read sensor value to check door is open or close
