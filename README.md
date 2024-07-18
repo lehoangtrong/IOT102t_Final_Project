@@ -11,7 +11,7 @@ Nếu sử dụng Arduino chính hãng nhưng máy không nhận, vui lòng ch�
 Trong dự án này, sử dụng 2 luồng dữ liệu là đăng kí và điểm danh cũng như là các vấn đề an toàn trong phòng học hiện nay.
 
 ## Cách tạo mạch
-![Schema](https://github.com/lehoangtrong/IOT102t_Final_Project/raw/coupstrong/flowchart/image/Circuit%20schematic.png)
+![Schema](https://github.com/lehoangtrong/IOT102t_Final_Project/blob/177b14dccbbfe8322d9f598c09819a7cd5965a9b/flowchart/image/Circuit%20schematic.png)
 
 ## Upload sketch
 
