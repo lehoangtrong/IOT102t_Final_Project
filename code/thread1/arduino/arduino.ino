@@ -2,7 +2,7 @@
 #include <LiquidCrystal_I2C.h>
 #include <Servo.h>
 
-#define PIN_FIRE_SENSOR 6
+#define PIN_FIRE_SENSOR A1
 #define PIN_PIR_SENSOR 7
 #define PIN_AIR_SENSOR A0
 #define PIN_SERVO_MOTOR 9
@@ -22,6 +22,9 @@ void setup()
 
   lcd.init();
   lcd.backlight();
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("Hello");
 
   pinMode(PIN_FIRE_SENSOR, INPUT);
   pinMode(PIN_PIR_SENSOR, INPUT);
@@ -32,7 +35,7 @@ void setup()
 void loop()
 {
   // Read sensor values
-  fireSensorValue = digitalRead(PIN_FIRE_SENSOR);
+  fireSensorValue = analogRead(PIN_FIRE_SENSOR);
   pirSensorValue = digitalRead(PIN_PIR_SENSOR);
   airSensorValue = analogRead(PIN_AIR_SENSOR);
 
@@ -50,8 +53,13 @@ void loop()
     lcd.setCursor(0, 0);
     lcd.print("System not safe!");
     lcd.setCursor(0, 1);
-    lcd.print("Please call 911");
-
+    lcd.print("F:    A:    P:");
+    lcd.setCursor(2, 1);
+    lcd.print(String(fireSensorValue));
+    lcd.setCursor(8, 1);
+    lcd.print(String(airSensorValue));
+    lcd.setCursor(14, 1);
+    lcd.print(String(pirSensorValue));
     // Open door
     servoMotor.write(90);
     delay(3000);
@@ -68,9 +76,15 @@ void loop()
 
     lcd.clear();
     lcd.setCursor(0, 0);
-    lcd.print("System is safe!");
+    lcd.print("System safe!");
     lcd.setCursor(0, 1);
-    lcd.print("Welcome FPT classroom!");
+    lcd.print("F:    A:    P:");
+    lcd.setCursor(2, 1);
+    lcd.print(String(fireSensorValue));
+    lcd.setCursor(8, 1);
+    lcd.print(String(airSensorValue));
+    lcd.setCursor(14, 1);
+    lcd.print(String(pirSensorValue));
 
     // Close door
     servoMotor.write(0);
@@ -88,13 +102,13 @@ void loop()
       servoMotor.write(0);
     }
   }
-  delay(1000);
+  delay(2000);
 }
 
 bool checkSensorValue()
 {
   bool check = false;
-  if (fireSensorValue == 1 || airSensorValue > 400 || airSensorValue < 40)
+  if (fireSensorValue < 200 || airSensorValue > 400 || airSensorValue < 40)
   {
     if (pirSensorValue == 1)
     {
