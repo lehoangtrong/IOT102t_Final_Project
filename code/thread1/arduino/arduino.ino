@@ -2,7 +2,7 @@
 #include <LiquidCrystal_I2C.h>
 #include <Servo.h>
 
-#define PIN_FIRE_SENSOR 6
+#define PIN_FIRE_SENSOR A1
 #define PIN_PIR_SENSOR 7
 #define PIN_AIR_SENSOR A0
 #define PIN_SERVO_MOTOR 9
@@ -18,20 +18,24 @@ bool checkSensorFire(); // Kiểm tra cảm biến cháy
 
 void setup()
 {
+  Serial.begin(115200);
+
   lcd.init();
   lcd.backlight();
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("Hello");
 
   pinMode(PIN_FIRE_SENSOR, INPUT);
   pinMode(PIN_PIR_SENSOR, INPUT);
   pinMode(PIN_AIR_SENSOR, INPUT);
   servoMotor.attach(PIN_SERVO_MOTOR);
-  Serial.begin(115200);
 }
 
 void loop()
 {
   // Read sensor values
-  fireSensorValue = digitalRead(PIN_FIRE_SENSOR);
+  fireSensorValue = analogRead(PIN_FIRE_SENSOR);
   pirSensorValue = digitalRead(PIN_PIR_SENSOR);
   airSensorValue = analogRead(PIN_AIR_SENSOR);
 
@@ -39,12 +43,23 @@ void loop()
   {
     Serial.println("System is not safe!!!!!");
 
+    Serial.println("====================================");
+    Serial.println("Fire sensor: " + String(fireSensorValue));
+    Serial.println("PIR sensor: " + String(pirSensorValue));
+    Serial.println("Air sensor: " + String(airSensorValue));
+    Serial.println("====================================");
+
     lcd.clear();
     lcd.setCursor(0, 0);
     lcd.print("System not safe!");
     lcd.setCursor(0, 1);
-    lcd.print("Please call 911");
-
+    lcd.print("F:    A:    P:");
+    lcd.setCursor(2, 1);
+    lcd.print(String(fireSensorValue));
+    lcd.setCursor(8, 1);
+    lcd.print(String(airSensorValue));
+    lcd.setCursor(14, 1);
+    lcd.print(String(pirSensorValue));
     // Open door
     servoMotor.write(90);
     delay(3000);
@@ -61,18 +76,25 @@ void loop()
 
     lcd.clear();
     lcd.setCursor(0, 0);
-    lcd.print("System is safe!");
+    lcd.print("System safe!");
     lcd.setCursor(0, 1);
-    lcd.print("Welcome FPT classroom!");
+    lcd.print("F:    A:    P:");
+    lcd.setCursor(2, 1);
+    lcd.print(String(fireSensorValue));
+    lcd.setCursor(8, 1);
+    lcd.print(String(airSensorValue));
+    lcd.setCursor(14, 1);
+    lcd.print(String(pirSensorValue));
 
     // Close door
     servoMotor.write(0);
   }
-  if (Serial.available() > 0)
-  { // read from esp8266
-    String data = Serial.readString().substring(0, 4);
+
+  if (Serial.available())
+  {
+    String data = Serial.readStringUntil('\n');
     Serial.println(data);
-    if (data.equals("OPEN"))
+    if (data.indexOf("OPEN") >= 0)
     {
       servoMotor.write(90);
       delay(3000); // maybe can change read sensor value to check door is open or close
@@ -80,13 +102,13 @@ void loop()
       servoMotor.write(0);
     }
   }
-  delay(1000);
+  delay(2000);
 }
 
 bool checkSensorValue()
 {
   bool check = false;
-  if (fireSensorValue == 1 || airSensorValue > 400 || airSensorValue < 40)
+  if (fireSensorValue < 200 || airSensorValue > 400 || airSensorValue < 40)
   {
     if (pirSensorValue == 1)
     {
